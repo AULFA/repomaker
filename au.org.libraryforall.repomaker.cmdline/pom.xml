@@ -8,7 +8,7 @@
   <parent>
     <groupId>au.org.libraryforall</groupId>
     <artifactId>au.org.libraryforall.repomaker</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
   </parent>
 
   <artifactId>au.org.libraryforall.repomaker.cmdline</artifactId>
@@ -17,6 +17,10 @@
   <name>au.org.libraryforall.repomaker.cmdline</name>
   <description>Updater repository maker (Command-line implementation)</description>
   <url>https://github.com/AULFA/repomaker</url>
+
+  <properties>
+    <mdep.analyze.skip>true</mdep.analyze.skip>
+  </properties>
 
   <dependencies>
     <dependency>
