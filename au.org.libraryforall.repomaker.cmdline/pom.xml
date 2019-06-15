@@ -18,6 +18,10 @@
   <description>Updater repository maker (Command-line implementation)</description>
   <url>https://github.com/AULFA/repomaker</url>
 
+  <properties>
+    <mdep.analyze.skip>true</mdep.analyze.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
