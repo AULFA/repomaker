@@ -8,11 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
+import java.time.Instant;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -66,21 +69,58 @@ public final class RepositoryManager implements RepositoryManagerType
 
     while (true) {
       try {
-        final var watchKey = watchService.take();
-
-        for (final var event : watchKey.pollEvents()) {
-          this.handleEvent(event);
+        if (!this.releasesIsUpToDate()) {
+          LOG.debug("releases file is older than one of the directory files");
+          this.doRegeneration();
         }
 
-        if (!watchKey.reset()) {
-          watchKey.cancel();
-          watchService.close();
-          break;
+        LOG.debug("polling");
+        final var watchKey = watchService.poll(5L, TimeUnit.SECONDS);
+        if (watchKey != null) {
+          for (final var event : watchKey.pollEvents()) {
+            this.handleEvent(event);
+          }
+
+          if (!watchKey.reset()) {
+            watchKey.cancel();
+            watchService.close();
+            break;
+          }
         }
+      } catch (final IOException e) {
+        LOG.error("i/o error: ", e);
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
       }
     }
+  }
+
+  private boolean releasesIsUpToDate()
+    throws IOException
+  {
+    final var releasesTime =
+      Files.getLastModifiedTime(this.releases).toInstant();
+
+    final var newestFile =
+      Files.list(this.path)
+        .sorted()
+        .filter(file -> !this.isReleaseFile(file))
+        .map(file -> {
+          try {
+            return Files.getLastModifiedTime(file).toInstant();
+          } catch (final IOException e) {
+            return releasesTime;
+          }
+        })
+        .max(Instant::compareTo)
+        .orElse(releasesTime);
+
+    return releasesTime.isAfter(newestFile);
+  }
+
+  private boolean isReleaseFile(final Path file)
+  {
+    return file.equals(this.releases) || file.equals(this.releasesTemp);
   }
 
   private void handleEvent(final WatchEvent<?> event)
@@ -103,35 +143,37 @@ public final class RepositoryManager implements RepositoryManagerType
     final Path path)
     throws IOException
   {
-    if (path.equals(this.releases)) {
-      return;
+    if (!this.isReleaseFile(path)) {
+      LOG.debug("file {} changed, regenerating repository", path);
+      this.doRegeneration();
     }
-    if (path.equals(this.releasesTemp)) {
-      return;
-    }
-
-    LOG.debug("file {} changed, regenerating repository", path);
-    this.trigger();
   }
 
-  private void trigger()
+  private void doRegeneration()
     throws IOException
   {
-    try (var output = Files.newOutputStream(this.releasesTemp, CREATE_NEW, WRITE)) {
-      final var builder = this.builders.createBuilder();
+    try {
+      try (var output = Files.newOutputStream(this.releasesTemp, CREATE_NEW, WRITE)) {
+        final var builder = this.builders.createBuilder();
 
-      final var repos =
-        builder.build(
-          this.configuration.path(),
-          this.configuration.self(),
-          this.configuration.id(),
-          this.configuration.title());
+        final var repos =
+          builder.build(
+            this.configuration.path(),
+            this.configuration.self(),
+            this.configuration.id(),
+            this.configuration.title());
 
-      final var target = this.configuration.path().toUri();
-      final var serializer = this.serializers.createSerializer(repos, target, output);
-      serializer.serialize();
+        final var target = this.configuration.path().toUri();
+        final var serializer = this.serializers.createSerializer(repos, target, output);
+        serializer.serialize();
+      }
+
+      Files.move(this.releasesTemp, this.releases, StandardCopyOption.ATOMIC_MOVE);
+    } catch (final FileAlreadyExistsException e) {
+      throw e;
+    } catch (final IOException e) {
+      Files.deleteIfExists(this.releasesTemp);
+      throw e;
     }
-
-    Files.move(this.releasesTemp, this.releases, StandardCopyOption.ATOMIC_MOVE);
   }
 }
