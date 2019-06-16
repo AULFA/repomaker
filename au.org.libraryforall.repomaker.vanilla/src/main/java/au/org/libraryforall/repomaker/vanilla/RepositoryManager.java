@@ -101,21 +101,28 @@ public final class RepositoryManager implements RepositoryManagerType
     final var releasesTime =
       Files.getLastModifiedTime(this.releases).toInstant();
 
-    final var newestFile =
-      Files.list(this.path)
-        .sorted()
-        .filter(file -> !this.isReleaseFile(file))
-        .map(file -> {
-          try {
-            return Files.getLastModifiedTime(file).toInstant();
-          } catch (final IOException e) {
-            return releasesTime;
-          }
-        })
-        .max(Instant::compareTo)
-        .orElse(releasesTime);
+    try (var stream = Files.list(this.path)) {
+      final var newestFile =
+        stream
+          .sorted()
+          .filter(file -> !this.isReleaseFile(file))
+          .map(file -> fileTimeOrDefault(releasesTime, file))
+          .max(Instant::compareTo)
+          .orElse(releasesTime);
 
-    return releasesTime.isAfter(newestFile);
+      return releasesTime.isAfter(newestFile);
+    }
+  }
+
+  private static Instant fileTimeOrDefault(
+    final Instant defaultTime,
+    final Path file)
+  {
+    try {
+      return Files.getLastModifiedTime(file).toInstant();
+    } catch (final IOException e) {
+      return defaultTime;
+    }
   }
 
   private boolean isReleaseFile(final Path file)
