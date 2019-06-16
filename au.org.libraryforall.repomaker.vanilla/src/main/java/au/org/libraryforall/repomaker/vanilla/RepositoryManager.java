@@ -12,16 +12,11 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.WatchEvent;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
  * A repository manager.
@@ -62,11 +57,7 @@ public final class RepositoryManager implements RepositoryManagerType
 
   @Override
   public void start()
-    throws IOException
   {
-    final var watchService = this.path.getFileSystem().newWatchService();
-    this.path.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
-
     while (true) {
       try {
         if (!this.releasesIsUpToDate()) {
@@ -75,18 +66,7 @@ public final class RepositoryManager implements RepositoryManagerType
         }
 
         LOG.debug("polling");
-        final var watchKey = watchService.poll(5L, TimeUnit.SECONDS);
-        if (watchKey != null) {
-          for (final var event : watchKey.pollEvents()) {
-            this.handleEvent(event);
-          }
-
-          if (!watchKey.reset()) {
-            watchKey.cancel();
-            watchService.close();
-            break;
-          }
-        }
+        Thread.sleep(5_000L);
       } catch (final IOException e) {
         LOG.error("i/o error: ", e);
       } catch (final InterruptedException e) {
@@ -128,32 +108,6 @@ public final class RepositoryManager implements RepositoryManagerType
   private boolean isReleaseFile(final Path file)
   {
     return file.equals(this.releases) || file.equals(this.releasesTemp);
-  }
-
-  private void handleEvent(final WatchEvent<?> event)
-    throws IOException
-  {
-    final var kind = event.kind();
-    if (kind.equals(ENTRY_CREATE)) {
-      final var pathCreated = (Path) event.context();
-      this.checkIfSignificantFileChanged(this.path.resolve(pathCreated));
-    } else if (kind.equals(ENTRY_DELETE)) {
-      final var pathDeleted = (Path) event.context();
-      this.checkIfSignificantFileChanged(this.path.resolve(pathDeleted));
-    } else if (kind.equals(ENTRY_MODIFY)) {
-      final var pathModified = (Path) event.context();
-      this.checkIfSignificantFileChanged(this.path.resolve(pathModified));
-    }
-  }
-
-  private void checkIfSignificantFileChanged(
-    final Path path)
-    throws IOException
-  {
-    if (!this.isReleaseFile(path)) {
-      LOG.debug("file {} changed, regenerating repository", path);
-      this.doRegeneration();
-    }
   }
 
   private void doRegeneration()
