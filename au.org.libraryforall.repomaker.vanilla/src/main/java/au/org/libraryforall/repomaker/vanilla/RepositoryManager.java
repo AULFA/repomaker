@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -78,20 +79,23 @@ public final class RepositoryManager implements RepositoryManagerType
   private boolean releasesIsUpToDate()
     throws IOException
   {
-    final var releasesTime =
-      Files.getLastModifiedTime(this.releases).toInstant();
+    final var releasesTime = Files.getLastModifiedTime(this.releases).toInstant();
 
-    try (var stream = Files.list(this.path)) {
-      final var newestFile =
-        stream
-          .sorted()
-          .filter(file -> !this.isReleaseFile(file))
-          .map(file -> fileTimeOrDefault(releasesTime, file))
-          .max(Instant::compareTo)
-          .orElse(releasesTime);
-
-      return releasesTime.isAfter(newestFile);
+    try (var stream = Files.newDirectoryStream(this.path)) {
+      final var iterator = stream.iterator();
+      while (iterator.hasNext()) {
+        final var file = iterator.next();
+        if (this.isReleaseFile(file)) {
+          continue;
+        }
+        final var time = fileTimeOrDefault(releasesTime, file);
+        if (!releasesTime.isAfter(time)) {
+          return false;
+        }
+      }
     }
+
+    return true;
   }
 
   private static Instant fileTimeOrDefault(
