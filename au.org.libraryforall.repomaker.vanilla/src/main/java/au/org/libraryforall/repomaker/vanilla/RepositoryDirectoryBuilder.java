@@ -20,6 +20,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -107,10 +108,10 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
         .setUpdated(LocalDateTime.now())
         .setTitle(title);
 
-    final var files =
-      Files.list(path)
-        .sorted()
-        .collect(Collectors.toList());
+    final List<Path> files;
+    try (var stream = Files.list(path)) {
+      files = stream.sorted().collect(Collectors.toList());
+    }
 
     for (final var file : files) {
       if (appearsToBeAPK(file)) {
