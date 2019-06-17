@@ -46,7 +46,13 @@ final class CommandManage extends CommandRoot
     names = "--releases-per-package",
     description = "The number of releases per package to include (includes all releases if not specified)",
     required = false)
-  private OptionalInt releases = OptionalInt.empty();
+  private int releases = Integer.MAX_VALUE;
+
+  @Parameter(
+    names = "--releases-delete-old",
+    description = "Delete releases that are older than the limit specified by --releases-per-package",
+    required = false)
+  private boolean deleteOldReleases;
 
   // CHECKSTYLE:ON
 
@@ -79,6 +85,7 @@ final class CommandManage extends CommandRoot
       managerProvider.createManager(
         RepositoryManagerConfiguration.builder()
           .setBuilderConfiguration(configuration)
+          .setDeleteOldReleases(this.deleteOldReleases)
           .build());
 
     manager.start();

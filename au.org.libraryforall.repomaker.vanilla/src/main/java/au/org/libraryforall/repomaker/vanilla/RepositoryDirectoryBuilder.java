@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -74,29 +75,41 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
 
     try (var apkFile = new ApkFile(file.toFile())) {
       final var apkMeta = apkFile.getApkMeta();
-
-      final String digestText;
-      try (var stream = Files.newInputStream(file, StandardOpenOption.READ)) {
-        final var digest = MessageDigest.getInstance("SHA-256");
-        try (var digestStream = new DigestInputStream(stream, digest)) {
-          digestStream.transferTo(OutputStream.nullOutputStream());
-          digestText = Hex.encodeHexString(digest.digest());
-        }
-      } catch (final NoSuchAlgorithmException e) {
-        throw new IllegalStateException(e);
-      }
-
       final var label = labelOf(apkMeta);
+      final var hash = hashOf(file);
+
       return RepositoryPackage.builder()
         .setId(apkMeta.getPackageName())
         .setName(label)
-        .setHash(Hash.builder()
-                   .setText(digestText)
-                   .build())
+        .setHash(hash)
         .setSource(URI.create(file.getFileName().toString()))
         .setVersionCode(apkMeta.getVersionCode().intValue())
         .setVersionName(apkMeta.getVersionName())
         .build();
+    }
+  }
+
+  private static Hash hashOf(
+    final Path file)
+    throws IOException
+  {
+    return Hash.builder()
+      .setText(digestFile(file))
+      .build();
+  }
+
+  private static String digestFile(
+    final Path file)
+    throws IOException
+  {
+    try (var stream = Files.newInputStream(file, StandardOpenOption.READ)) {
+      final var digest = MessageDigest.getInstance("SHA-256");
+      try (var digestStream = new DigestInputStream(stream, digest)) {
+        digestStream.transferTo(OutputStream.nullOutputStream());
+        return Hex.encodeHexString(digest.digest());
+      }
+    } catch (final NoSuchAlgorithmException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -141,7 +154,20 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     }
 
     final var initialRepository = repositoryBuilder.build();
+    return trimOldReleases(configuration, resultBuilder, uriToFile, initialRepository);
+  }
 
+  /**
+   * For each package in the repository, remove the oldest releases (assuming that a limit has
+   * been specified for releases).
+   */
+
+  private static RepositoryDirectoryBuilderResult trimOldReleases(
+    final RepositoryDirectoryBuilderConfiguration configuration,
+    final RepositoryDirectoryBuilderResult.Builder resultBuilder,
+    final Map<URI, Path> uriToFile,
+    final Repository initialRepository)
+  {
     final var limitReleasesOpt = configuration.limitReleases();
     if (limitReleasesOpt.isPresent()) {
       final var limitRelease = limitReleasesOpt.getAsInt();

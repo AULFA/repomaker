@@ -17,6 +17,7 @@
 package au.org.libraryforall.repomaker.vanilla;
 
 import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderProviderType;
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderResult;
 import au.org.libraryforall.repomaker.manager.api.RepositoryManagerConfiguration;
 import au.org.libraryforall.repomaker.manager.api.RepositoryManagerType;
 import au.org.libraryforall.repomaker.serializer.api.RepositorySerializerProviderType;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
@@ -89,15 +91,35 @@ public final class RepositoryManager implements RepositoryManagerType
       try {
         if (!this.releasesIsUpToDate()) {
           LOG.debug("releases file is older than one of the directory files");
-          this.doRegeneration();
+          final var result = this.doRegeneration();
+          this.deleteOldAPKFiles(result);
         }
 
         LOG.debug("polling");
         Thread.sleep(5_000L);
       } catch (final IOException e) {
         LOG.error("i/o error: ", e);
+        try {
+          Thread.sleep(5_000L);
+        } catch (final InterruptedException ex) {
+          Thread.currentThread().interrupt();
+        }
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  private void deleteOldAPKFiles(
+    final RepositoryDirectoryBuilderResult result)
+    throws IOException
+  {
+    for (final var apk : result.ignoredAPKs()) {
+      if (this.configuration.deleteOldReleases()) {
+        LOG.debug("deleting {}", apk);
+        Files.deleteIfExists(apk);
+      } else {
+        LOG.debug("would have deleted {} if deletion was enabled", apk);
       }
     }
   }
@@ -105,7 +127,12 @@ public final class RepositoryManager implements RepositoryManagerType
   private boolean releasesIsUpToDate()
     throws IOException
   {
-    final var releasesTime = Files.getLastModifiedTime(this.releases).toInstant();
+    final Instant releasesTime;
+    try {
+      releasesTime = Files.getLastModifiedTime(this.releases).toInstant();
+    } catch (final NoSuchFileException e) {
+      return false;
+    }
 
     try (var stream = Files.newDirectoryStream(this.path)) {
       final var iterator = stream.iterator();
@@ -129,14 +156,16 @@ public final class RepositoryManager implements RepositoryManagerType
     return file.equals(this.releases) || file.equals(this.releasesTemp);
   }
 
-  private void doRegeneration()
+  private RepositoryDirectoryBuilderResult doRegeneration()
     throws IOException
   {
+    LOG.info("generating new repository file");
+
     try {
+      final RepositoryDirectoryBuilderResult result;
       try (var output = Files.newOutputStream(this.releasesTemp, CREATE_NEW, WRITE)) {
         final var builder = this.builders.createBuilder();
-
-        final var result = builder.build(this.configuration.builderConfiguration());
+        result = builder.build(this.configuration.builderConfiguration());
         final var repos = result.repository();
         final var target = this.configuration.builderConfiguration().path().toUri();
         final var serializer = this.serializers.createSerializer(repos, target, output);
@@ -144,6 +173,7 @@ public final class RepositoryManager implements RepositoryManagerType
       }
 
       Files.move(this.releasesTemp, this.releases, StandardCopyOption.ATOMIC_MOVE);
+      return result;
     } catch (final FileAlreadyExistsException e) {
       throw e;
     } catch (final IOException e) {

@@ -37,4 +37,14 @@ public interface RepositoryManagerConfigurationType
    */
 
   RepositoryDirectoryBuilderConfiguration builderConfiguration();
+
+  /**
+   * @return {@code true} if any APK ignored by the directory builder should be deleted
+   */
+
+  @Value.Default
+  default boolean deleteOldReleases()
+  {
+    return false;
+  }
 }
