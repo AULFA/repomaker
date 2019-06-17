@@ -5,8 +5,14 @@ import org.immutables.value.Value;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * A repository.
@@ -45,4 +51,31 @@ public interface RepositoryType
    */
 
   URI self();
+
+  /**
+   * @return The available packages organized by package name
+   */
+
+  @Value.Auxiliary
+  @Value.Derived
+  default Map<String, List<RepositoryPackage>> packagesByName()
+  {
+    final var map = new HashMap<String, List<RepositoryPackage>>(this.packages().size());
+    for (final var pack : this.packages()) {
+      var packs = map.get(pack.id());
+      if (packs == null) {
+        packs = new ArrayList<>(16);
+      }
+      packs.add(pack);
+      map.put(pack.id(), packs);
+    }
+
+    for (final var key : map.keySet()) {
+      final var packs = map.get(key);
+      packs.sort(Comparator.comparingInt(RepositoryPackage::versionCode));
+      map.put(key, Collections.unmodifiableList(packs));
+    }
+
+    return Collections.unmodifiableMap(map);
+  }
 }

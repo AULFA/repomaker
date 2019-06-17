@@ -1,11 +1,8 @@
 package au.org.libraryforall.repomaker.manager.api;
 
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import com.io7m.immutables.styles.ImmutablesStyleType;
 import org.immutables.value.Value;
-
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * Configuration data for a repository manager.
@@ -20,26 +17,8 @@ import java.util.UUID;
 public interface RepositoryManagerConfigurationType
 {
   /**
-   * @return The path that will be managed
+   * @return The directory-based repository builder configuration
    */
 
-  Path path();
-
-  /**
-   * @return The unique ID of the repository
-   */
-
-  UUID id();
-
-  /**
-   * @return The title of the repository
-   */
-
-  String title();
-
-  /**
-   * @return The URI of the repository
-   */
-
-  URI self();
+  RepositoryDirectoryBuilderConfiguration builderConfiguration();
 }

@@ -2,6 +2,8 @@ package au.org.libraryforall.repomaker.vanilla;
 
 import au.org.libraryforall.repomaker.api.Hash;
 import au.org.libraryforall.repomaker.api.Repository;
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderConfiguration;
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderResult;
 import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderType;
 import au.org.libraryforall.repomaker.api.RepositoryPackage;
 import net.dongliu.apk.parser.ApkFile;
@@ -20,9 +22,13 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -89,36 +95,64 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
   }
 
   @Override
-  public Repository build(
-    final Path path,
-    final URI self,
-    final UUID uuid,
-    final String title)
+  public RepositoryDirectoryBuilderResult build(
+    final RepositoryDirectoryBuilderConfiguration configuration)
     throws IOException
   {
-    Objects.requireNonNull(path, "path");
-    Objects.requireNonNull(self, "self");
-    Objects.requireNonNull(uuid, "uuid");
-    Objects.requireNonNull(title, "title");
+    Objects.requireNonNull(configuration, "configuration");
 
-    final var builder =
+    final var repositoryBuilder =
       Repository.builder()
-        .setId(uuid)
-        .setSelf(self)
+        .setId(configuration.uuid())
+        .setSelf(configuration.self())
         .setUpdated(LocalDateTime.now())
-        .setTitle(title);
+        .setTitle(configuration.title());
 
     final List<Path> files;
-    try (var stream = Files.list(path)) {
+    try (var stream = Files.list(configuration.path())) {
       files = stream.sorted().collect(Collectors.toList());
     }
 
+    final var resultBuilder =
+      RepositoryDirectoryBuilderResult.builder();
+
+    final var uriToFile = new TreeMap<URI, Path>();
     for (final var file : files) {
       if (appearsToBeAPK(file)) {
-        builder.addPackages(buildPackageOfFile(file));
+        final var repositoryPackage = buildPackageOfFile(file);
+        uriToFile.put(repositoryPackage.source(), file);
+        repositoryBuilder.addPackages(repositoryPackage);
       }
     }
 
-    return builder.build();
+    final var initialRepository = repositoryBuilder.build();
+
+    final var limitReleasesOpt = configuration.limitReleases();
+    if (limitReleasesOpt.isPresent()) {
+      final var limitRelease = limitReleasesOpt.getAsInt();
+      final var limitedPackages = new ArrayList<RepositoryPackage>(32);
+      final var byName = initialRepository.packagesByName();
+      final var ignored = new HashSet<Path>();
+
+      for (final var key : byName.keySet()) {
+        final var versions = byName.get(key);
+        final var limit = Math.min(limitRelease, versions.size());
+        final var start = versions.size() - limit;
+        final var limited = versions.subList(start, versions.size());
+        limitedPackages.addAll(limited);
+
+        for (var index = 0; index < start; ++index) {
+          final var file = uriToFile.get(versions.get(index).source());
+          ignored.add(file);
+        }
+      }
+      resultBuilder.setIgnoredAPKs(ignored);
+      resultBuilder.setRepository(initialRepository.withPackages(limitedPackages));
+    } else {
+      resultBuilder.setIgnoredAPKs(Collections.emptyList());
+      resultBuilder.setRepository(initialRepository);
+    }
+
+    return resultBuilder.build();
   }
 }

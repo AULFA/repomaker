@@ -14,7 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.WRITE;
@@ -47,7 +46,7 @@ public final class RepositoryManager implements RepositoryManagerType
       Objects.requireNonNull(in_builders, "builders");
 
     this.path =
-      this.configuration.path().toAbsolutePath();
+      this.configuration.builderConfiguration().path().toAbsolutePath();
     this.releases =
       this.path.resolve("releases.xml")
         .toAbsolutePath();
@@ -121,14 +120,9 @@ public final class RepositoryManager implements RepositoryManagerType
       try (var output = Files.newOutputStream(this.releasesTemp, CREATE_NEW, WRITE)) {
         final var builder = this.builders.createBuilder();
 
-        final var repos =
-          builder.build(
-            this.configuration.path(),
-            this.configuration.self(),
-            this.configuration.id(),
-            this.configuration.title());
-
-        final var target = this.configuration.path().toUri();
+        final var result = builder.build(this.configuration.builderConfiguration());
+        final var repos = result.repository();
+        final var target = this.configuration.builderConfiguration().path().toUri();
         final var serializer = this.serializers.createSerializer(repos, target, output);
         serializer.serialize();
       }

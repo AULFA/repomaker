@@ -1,5 +1,6 @@
 package au.org.libraryforall.repomaker.cmdline;
 
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderProviderType;
 import au.org.libraryforall.repomaker.serializer.api.RepositorySerializerProviderType;
 import com.beust.jcommander.Parameter;
@@ -8,6 +9,8 @@ import com.beust.jcommander.Parameters;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.ServiceLoader;
 import java.util.UUID;
 
@@ -46,8 +49,15 @@ final class CommandGenerate extends CommandRoot
   private String title;
 
   @Parameter(
+    names = "--releases-per-package",
+    description = "The number of releases per package to include (includes all releases if not specified)",
+    required = false)
+  private int releases = Integer.MAX_VALUE;
+
+  @Parameter(
     names = "--output",
-    description = "The output file")
+    description = "The output file",
+    required = true)
   private Path output;
 
   // CHECKSTYLE:ON
@@ -77,13 +87,17 @@ final class CommandGenerate extends CommandRoot
       final var builder =
         builderProvider.createBuilder();
 
-      final var repos =
-        builder.build(
-          this.directory,
-          this.uri,
-          this.uuid,
-          this.title);
+      final var configuration =
+        RepositoryDirectoryBuilderConfiguration.builder()
+          .setLimitReleases(OptionalInt.of(this.releases))
+          .setTitle(this.title)
+          .setUuid(this.uuid)
+          .setSelf(this.uri)
+          .setPath(this.directory)
+          .build();
 
+      final var result = builder.build(configuration);
+      final var repos = result.repository();
       final var target = URI.create("urn:stdout");
       final var serializer = serializerProvider.createSerializer(repos, target, output);
       serializer.serialize();
