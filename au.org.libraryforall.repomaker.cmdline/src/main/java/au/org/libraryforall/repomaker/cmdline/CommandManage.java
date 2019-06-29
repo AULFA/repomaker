@@ -1,5 +1,6 @@
 package au.org.libraryforall.repomaker.cmdline;
 
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import au.org.libraryforall.repomaker.manager.api.RepositoryManagerConfiguration;
 import au.org.libraryforall.repomaker.manager.api.RepositoryManagerProviderType;
 import com.beust.jcommander.Parameter;
@@ -40,6 +41,18 @@ final class CommandManage extends CommandRoot
     required = true)
   private String title;
 
+  @Parameter(
+    names = "--releases-per-package",
+    description = "The number of releases per package to include (includes all releases if not specified)",
+    required = false)
+  private int releases = Integer.MAX_VALUE;
+
+  @Parameter(
+    names = "--releases-delete-old",
+    description = "Delete releases that are older than the limit specified by --releases-per-package",
+    required = false)
+  private boolean deleteOldReleases;
+
   // CHECKSTYLE:ON
 
   CommandManage()
@@ -58,13 +71,20 @@ final class CommandManage extends CommandRoot
         .findFirst()
         .orElseThrow(() -> new IllegalStateException("No available services of type " + RepositoryManagerProviderType.class));
 
+    final var configuration =
+      RepositoryDirectoryBuilderConfiguration.builder()
+        .setLimitReleases(this.releases)
+        .setTitle(this.title)
+        .setUuid(this.uuid)
+        .setSelf(this.uri)
+        .setPath(this.directory)
+        .build();
+
     final var manager =
       managerProvider.createManager(
         RepositoryManagerConfiguration.builder()
-          .setSelf(this.uri)
-          .setId(this.uuid)
-          .setTitle(this.title)
-          .setPath(this.directory)
+          .setBuilderConfiguration(configuration)
+          .setDeleteOldReleases(this.deleteOldReleases)
           .build());
 
     manager.start();

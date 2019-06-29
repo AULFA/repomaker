@@ -1,11 +1,24 @@
+/*
+ * Copyright © 2019 Library For All
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package au.org.libraryforall.repomaker.manager.api;
 
+import au.org.libraryforall.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import com.io7m.immutables.styles.ImmutablesStyleType;
 import org.immutables.value.Value;
-
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * Configuration data for a repository manager.
@@ -20,26 +33,18 @@ import java.util.UUID;
 public interface RepositoryManagerConfigurationType
 {
   /**
-   * @return The path that will be managed
+   * @return The directory-based repository builder configuration
    */
 
-  Path path();
+  RepositoryDirectoryBuilderConfiguration builderConfiguration();
 
   /**
-   * @return The unique ID of the repository
+   * @return {@code true} if any APK ignored by the directory builder should be deleted
    */
 
-  UUID id();
-
-  /**
-   * @return The title of the repository
-   */
-
-  String title();
-
-  /**
-   * @return The URI of the repository
-   */
-
-  URI self();
+  @Value.Default
+  default boolean deleteOldReleases()
+  {
+    return false;
+  }
 }

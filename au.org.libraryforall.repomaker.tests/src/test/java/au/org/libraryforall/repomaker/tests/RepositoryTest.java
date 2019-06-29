@@ -10,7 +10,7 @@ public final class RepositoryTest
   public void testEquals()
   {
     EqualsVerifier.forClass(Repository.class)
-      .withNonnullFields("id", "title", "updated", "packages", "self")
+      .withNonnullFields("id", "title", "updated", "packages", "self", "packagesByName")
       .verify();
   }
 }

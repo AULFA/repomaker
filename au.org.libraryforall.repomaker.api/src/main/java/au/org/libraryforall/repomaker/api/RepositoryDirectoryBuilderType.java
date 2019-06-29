@@ -1,9 +1,22 @@
+/*
+ * Copyright © 2019 Library For All
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package au.org.libraryforall.repomaker.api;
 
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.UUID;
 
 /**
  * A directory-based repository builder.
@@ -12,22 +25,16 @@ import java.util.UUID;
 public interface RepositoryDirectoryBuilderType
 {
   /**
-   * Scan the directory at {@code path} and generate a repository from the contents.
+   * Generate a repository based on the given configuration.
    *
-   * @param path  The source directory
-   * @param self  The URI of the generated repository
-   * @param uuid  The UUID that will identify the repository
-   * @param title The title of the repository
+   * @param configuration The configuration
    *
    * @return A new repository
    *
    * @throws IOException On I/O errors
    */
 
-  Repository build(
-    Path path,
-    URI self,
-    UUID uuid,
-    String title)
+  RepositoryDirectoryBuilderResult build(
+    RepositoryDirectoryBuilderConfiguration configuration)
     throws IOException;
 }

@@ -20,48 +20,47 @@ import com.io7m.immutables.styles.ImmutablesStyleType;
 import org.immutables.value.Value;
 
 import java.net.URI;
+import java.nio.file.Path;
+import java.util.OptionalInt;
+import java.util.UUID;
 
 /**
- * A package in a repository.
+ * Configuration information for the directory builder.
  */
 
 @ImmutablesStyleType
 @Value.Immutable
-public interface RepositoryPackageType
+public interface RepositoryDirectoryBuilderConfigurationType
 {
   /**
-   * @return The package ID
+   * @return The directory containing APK files
    */
 
-  String id();
+  Path path();
 
   /**
-   * @return The package version
+   * @return The URI of the generated repository
    */
 
-  int versionCode();
+  URI self();
 
   /**
-   * @return The humanly-readable version name
+   * @return The UUID used to identify the repository
    */
 
-  String versionName();
+  UUID uuid();
 
   /**
-   * @return The humanly-readable package label
+   * @return The title of the repository
    */
 
-  String name();
+  String title();
 
   /**
-   * @return The source URI of the package
+   * A limit on the number of releases of each APK that should appear in repositories.
+   *
+   * @return A limit on the number of releases
    */
 
-  URI source();
-
-  /**
-   * @return The hash of the package
-   */
-
-  Hash hash();
+  OptionalInt limitReleases();
 }

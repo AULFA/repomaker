@@ -9,12 +9,12 @@
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
     <artifactId>com.io7m.primogenitor</artifactId>
-    <version>3.0.0-beta0020</version>
+    <version>3.0.0-beta0022</version>
   </parent>
 
   <groupId>au.org.libraryforall</groupId>
   <artifactId>au.org.libraryforall.repomaker</artifactId>
-  <version>0.0.5</version>
+  <version>0.0.6</version>
   <packaging>pom</packaging>
 
   <name>au.org.libraryforall.repomaker</name>
