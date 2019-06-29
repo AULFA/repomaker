@@ -1,6 +1,8 @@
 repomaker
 ===
 
+[![Build Status](https://img.shields.io/travis/AULFA/repomaker.svg?style=flat-square)](https://travis-ci.org/AULFA/repomaker)
+
 A lightweight repository generator for the [updater](https://github.com/AULFA/updater).
 
 ![repomaker](./src/site/resources/repomaker.jpg?raw=true)
