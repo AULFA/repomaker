@@ -12,6 +12,7 @@ A lightweight repository generator for the [updater](https://github.com/AULFA/up
 ## Features
 
 * Efficient generation of repository files from directories of APK files.
+* Efficient generation of repository files from lists of OPDS package files.
 * Directory-watching service for continuous generation and publishing of repository files.
 * Well designed modular API for use in Java 11+ programs
 * Lightweight: Designed to run with tiny (32mb+) JVM heaps on inexpensive VPS hosting.
