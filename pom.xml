@@ -8,31 +8,31 @@
 
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
-    <artifactId>com.io7m.primogenitor</artifactId>
-    <version>3.0.0-beta0022</version>
+    <artifactId>com.io7m.primogenitor.full</artifactId>
+    <version>3.5.0</version>
   </parent>
 
-  <groupId>au.org.libraryforall</groupId>
-  <artifactId>au.org.libraryforall.repomaker</artifactId>
+  <groupId>one.lfa</groupId>
+  <artifactId>one.lfa.repomaker</artifactId>
   <version>0.0.6</version>
   <packaging>pom</packaging>
 
-  <name>au.org.libraryforall.repomaker</name>
+  <name>one.lfa.repomaker</name>
   <description>Updater repository maker</description>
   <url>http://github.com/AULFA/repomaker</url>
 
   <modules>
-    <module>au.org.libraryforall.repomaker.api</module>
-    <module>au.org.libraryforall.repomaker.cmdline</module>
-    <module>au.org.libraryforall.repomaker.manager.api</module>
-    <module>au.org.libraryforall.repomaker.serializer.api</module>
-    <module>au.org.libraryforall.repomaker.tests</module>
-    <module>au.org.libraryforall.repomaker.vanilla</module>
+    <module>one.lfa.repomaker.api</module>
+    <module>one.lfa.repomaker.cmdline</module>
+    <module>one.lfa.repomaker.manager.api</module>
+    <module>one.lfa.repomaker.serializer.api</module>
+    <module>one.lfa.repomaker.tests</module>
+    <module>one.lfa.repomaker.vanilla</module>
   </modules>
 
   <properties>
     <io7m.api.previousVersion>0.0.1</io7m.api.previousVersion>
-    <au.org.libraryforall.org.immutables.version>2.7.5</au.org.libraryforall.org.immutables.version>
+    <one.lfa.org.immutables.version>2.7.5</one.lfa.org.immutables.version>
   </properties>
 
   <inceptionYear>2019</inceptionYear>
@@ -94,7 +94,7 @@
       <dependency>
         <groupId>org.immutables</groupId>
         <artifactId>value</artifactId>
-        <version>${au.org.libraryforall.org.immutables.version}</version>
+        <version>${one.lfa.org.immutables.version}</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.immutables.style</groupId>

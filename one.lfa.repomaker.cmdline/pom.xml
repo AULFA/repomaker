@@ -6,15 +6,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>au.org.libraryforall</groupId>
-    <artifactId>au.org.libraryforall.repomaker</artifactId>
+    <groupId>one.lfa</groupId>
+    <artifactId>one.lfa.repomaker</artifactId>
     <version>0.0.6</version>
   </parent>
 
-  <artifactId>au.org.libraryforall.repomaker.cmdline</artifactId>
+  <artifactId>one.lfa.repomaker.cmdline</artifactId>
   <packaging>jar</packaging>
 
-  <name>au.org.libraryforall.repomaker.cmdline</name>
+  <name>one.lfa.repomaker.cmdline</name>
   <description>Updater repository maker (Command-line implementation)</description>
   <url>https://github.com/AULFA/repomaker</url>
 
@@ -25,22 +25,22 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>au.org.libraryforall.repomaker.api</artifactId>
+      <artifactId>one.lfa.repomaker.api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>au.org.libraryforall.repomaker.serializer.api</artifactId>
+      <artifactId>one.lfa.repomaker.serializer.api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>au.org.libraryforall.repomaker.manager.api</artifactId>
+      <artifactId>one.lfa.repomaker.manager.api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>au.org.libraryforall.repomaker.vanilla</artifactId>
+      <artifactId>one.lfa.repomaker.vanilla</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -90,7 +90,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
-                    <Main-Class>au.org.libraryforall.repomaker.cmdline.Main</Main-Class>
+                    <Main-Class>one.lfa.repomaker.cmdline.Main</Main-Class>
                   </manifestEntries>
                 </transformer>
               </transformers>

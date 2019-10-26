@@ -6,35 +6,35 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>au.org.libraryforall</groupId>
-    <artifactId>au.org.libraryforall.repomaker</artifactId>
+    <groupId>one.lfa</groupId>
+    <artifactId>one.lfa.repomaker</artifactId>
     <version>0.0.6</version>
   </parent>
 
-  <artifactId>au.org.libraryforall.repomaker.manager.api</artifactId>
+  <artifactId>one.lfa.repomaker.vanilla</artifactId>
   <packaging>jar</packaging>
 
-  <name>au.org.libraryforall.repomaker.manager.api</name>
-  <description>Updater repository maker (Manager API)</description>
+  <name>one.lfa.repomaker.vanilla</name>
+  <description>Updater repository maker (Vanilla implementation)</description>
   <url>https://github.com/AULFA/repomaker</url>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>au.org.libraryforall.repomaker.api</artifactId>
+      <artifactId>one.lfa.repomaker.api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>one.lfa.repomaker.serializer.api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>one.lfa.repomaker.manager.api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.immutables</groupId>
-      <artifactId>value</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.io7m.immutables.style</groupId>
-      <artifactId>com.io7m.immutables.style</artifactId>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.annotation.bundle</artifactId>
@@ -44,6 +44,19 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.annotation.versioning</artifactId>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.dongliu</groupId>
+      <artifactId>apk-parser</artifactId>
     </dependency>
   </dependencies>
 
