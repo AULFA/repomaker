@@ -14,33 +14,36 @@
  * limitations under the License.
  */
 
-package one.lfa.repomaker.serializer.api;
+package one.lfa.repomaker.api;
 
-import one.lfa.repomaker.api.Repository;
+import com.io7m.immutables.styles.ImmutablesStyleType;
+import org.immutables.value.Value;
 
-import java.io.OutputStream;
 import java.net.URI;
 
 /**
- * A provider of repository serializers.
+ * An OPDS package in a repository.
  */
 
-public interface RepositorySerializerProviderType
+@ImmutablesStyleType
+@Value.Immutable
+public interface RepositoryOPDSPackageType extends RepositoryItemType
 {
-  /**
-   * Create a new serializer.
-   *
-   * @param repository    The repository to serialize
-   * @param target        The URI of the output, for diagnostics
-   * @param stream        The output stream
-   * @param formatVersion The format version to use
-   *
-   * @return A new serializer
-   */
+  @Override
+  String id();
 
-  RepositorySerializerType createSerializer(
-    Repository repository,
-    URI target,
-    OutputStream stream,
-    int formatVersion);
+  @Override
+  String versionName();
+
+  @Override
+  String name();
+
+  @Override
+  URI source();
+
+  @Override
+  Hash hash();
+
+  @Override
+  long versionCode();
 }

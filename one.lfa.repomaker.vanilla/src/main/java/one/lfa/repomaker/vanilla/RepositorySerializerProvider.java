@@ -42,8 +42,19 @@ public final class RepositorySerializerProvider implements RepositorySerializerP
   public RepositorySerializerType createSerializer(
     final Repository repository,
     final URI target,
-    final OutputStream stream)
+    final OutputStream stream,
+    final int formatVersion)
   {
-    return new RepositorySerializer(repository, target, stream);
+    switch (formatVersion) {
+      case 1: {
+        return new RepositorySerializerV1(repository, target, stream);
+      }
+      case 2: {
+        return new RepositorySerializerV2(repository, target, stream);
+      }
+      default: {
+        throw new UnsupportedOperationException("Unsupported format version: " + formatVersion);
+      }
+    }
   }
 }

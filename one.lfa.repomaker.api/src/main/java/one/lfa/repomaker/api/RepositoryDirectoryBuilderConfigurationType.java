@@ -33,7 +33,7 @@ import java.util.UUID;
 public interface RepositoryDirectoryBuilderConfigurationType
 {
   /**
-   * @return The directory containing APK files
+   * @return The directory containing items
    */
 
   Path path();
@@ -57,10 +57,16 @@ public interface RepositoryDirectoryBuilderConfigurationType
   String title();
 
   /**
-   * A limit on the number of releases of each APK that should appear in repositories.
+   * A limit on the number of releases of each item that should appear in repositories.
    *
    * @return A limit on the number of releases
    */
 
   OptionalInt limitReleases();
+
+  /**
+   * @return The repository format version to use
+   */
+
+  int formatVersion();
 }

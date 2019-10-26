@@ -56,6 +56,7 @@ public final class RepositoryDirectoryBuilderTest
         .setSelf(URI.create("urn:x"))
         .setUuid(uuid)
         .setTitle("Releases")
+        .setFormatVersion(2)
         .build();
 
     final var result = builder.build(config);
@@ -66,10 +67,10 @@ public final class RepositoryDirectoryBuilderTest
         Assertions.assertEquals(uuid, repos.id());
         Assertions.assertEquals(URI.create("urn:x"), repos.self());
         Assertions.assertEquals("Releases", repos.title());
-        Assertions.assertEquals(5, repos.packages().size());
+        Assertions.assertEquals(5, repos.items().size());
       },
       () -> {
-        final var p = repos.packages().get(0);
+        final var p = repos.items().get(0);
         Assertions.assertEquals("LFA Updater", p.name());
         Assertions.assertEquals(501, p.versionCode());
         Assertions.assertEquals("0.0.3", p.versionName());
@@ -79,7 +80,7 @@ public final class RepositoryDirectoryBuilderTest
           p.hash().text());
       },
       () -> {
-        final var p = repos.packages().get(1);
+        final var p = repos.items().get(1);
         Assertions.assertEquals("LFA", p.name());
         Assertions.assertEquals(178, p.versionCode());
         Assertions.assertEquals("1.3.7", p.versionName());
@@ -89,7 +90,7 @@ public final class RepositoryDirectoryBuilderTest
           p.hash().text());
       },
       () -> {
-        final var p = repos.packages().get(2);
+        final var p = repos.items().get(2);
         Assertions.assertEquals("LFA", p.name());
         Assertions.assertEquals(180, p.versionCode());
         Assertions.assertEquals("1.3.7", p.versionName());
@@ -99,7 +100,7 @@ public final class RepositoryDirectoryBuilderTest
           p.hash().text());
       },
       () -> {
-        final var p = repos.packages().get(3);
+        final var p = repos.items().get(3);
         Assertions.assertEquals("LFA", p.name());
         Assertions.assertEquals(181, p.versionCode());
         Assertions.assertEquals("1.3.7", p.versionName());
@@ -109,7 +110,7 @@ public final class RepositoryDirectoryBuilderTest
           p.hash().text());
       },
       () -> {
-        final var p = repos.packages().get(4);
+        final var p = repos.items().get(4);
         Assertions.assertEquals("LFA", p.name());
         Assertions.assertEquals(231, p.versionCode());
         Assertions.assertEquals("1.3.7", p.versionName());
@@ -163,6 +164,7 @@ public final class RepositoryDirectoryBuilderTest
         .setSelf(URI.create("urn:x"))
         .setUuid(uuid)
         .setTitle("Releases")
+        .setFormatVersion(2)
         .build();
 
     final var result = builder.build(config);
@@ -173,10 +175,10 @@ public final class RepositoryDirectoryBuilderTest
         Assertions.assertEquals(uuid, repos.id());
         Assertions.assertEquals(URI.create("urn:x"), repos.self());
         Assertions.assertEquals("Releases", repos.title());
-        Assertions.assertEquals(2, repos.packages().size());
+        Assertions.assertEquals(2, repos.items().size());
       },
       () -> {
-        final var p = repos.packages().get(1);
+        final var p = repos.items().get(1);
         Assertions.assertEquals("LFA Updater", p.name());
         Assertions.assertEquals(501, p.versionCode());
         Assertions.assertEquals("0.0.3", p.versionName());
@@ -186,7 +188,7 @@ public final class RepositoryDirectoryBuilderTest
           p.hash().text());
       },
       () -> {
-        final var p = repos.packages().get(0);
+        final var p = repos.items().get(0);
         Assertions.assertEquals("LFA", p.name());
         Assertions.assertEquals(231, p.versionCode());
         Assertions.assertEquals("1.3.7", p.versionName());

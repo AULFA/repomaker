@@ -168,7 +168,7 @@ public final class RepositoryManager implements RepositoryManagerType
         result = builder.build(this.configuration.builderConfiguration());
         final var repos = result.repository();
         final var target = this.configuration.builderConfiguration().path().toUri();
-        final var serializer = this.serializers.createSerializer(repos, target, output);
+        final var serializer = this.serializers.createSerializer(repos, target, output, 2);
         serializer.serialize();
       }
 

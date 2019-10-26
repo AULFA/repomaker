@@ -1,7 +1,7 @@
 package one.lfa.repomaker.tests;
 
-import one.lfa.repomaker.api.Hash;
 import nl.jqno.equalsverifier.EqualsVerifier;
+import one.lfa.repomaker.api.Hash;
 import org.junit.jupiter.api.Test;
 
 public final class HashTest

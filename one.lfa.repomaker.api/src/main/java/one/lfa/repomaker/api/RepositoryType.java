@@ -56,10 +56,10 @@ public interface RepositoryType
   LocalDateTime updated();
 
   /**
-   * @return The list of packages in the repository
+   * @return The list of items in the repository
    */
 
-  List<RepositoryPackage> packages();
+  List<RepositoryItemType> items();
 
   /**
    * @return The URI of the repository
@@ -68,15 +68,15 @@ public interface RepositoryType
   URI self();
 
   /**
-   * @return The available packages organized by package name
+   * @return The available packages organized by ID
    */
 
   @Value.Auxiliary
   @Value.Derived
-  default Map<String, List<RepositoryPackage>> packagesByName()
+  default Map<String, List<RepositoryItemType>> itemsById()
   {
-    final var map = new HashMap<String, List<RepositoryPackage>>(this.packages().size());
-    for (final var pack : this.packages()) {
+    final var map = new HashMap<String, List<RepositoryItemType>>(this.items().size());
+    for (final var pack : this.items()) {
       var packs = map.get(pack.id());
       if (packs == null) {
         packs = new ArrayList<>(16);
@@ -87,7 +87,7 @@ public interface RepositoryType
 
     for (final var key : map.keySet()) {
       final var packs = map.get(key);
-      packs.sort(Comparator.comparingInt(RepositoryPackage::versionCode));
+      packs.sort(Comparator.comparingLong(RepositoryItemType::versionCode));
       map.put(key, Collections.unmodifiableList(packs));
     }
 

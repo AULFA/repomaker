@@ -16,14 +16,15 @@
 
 package one.lfa.repomaker.vanilla;
 
+import net.dongliu.apk.parser.ApkFile;
+import net.dongliu.apk.parser.bean.ApkMeta;
 import one.lfa.repomaker.api.Hash;
 import one.lfa.repomaker.api.Repository;
+import one.lfa.repomaker.api.RepositoryAndroidPackage;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderResult;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderType;
-import one.lfa.repomaker.api.RepositoryPackage;
-import net.dongliu.apk.parser.ApkFile;
-import net.dongliu.apk.parser.bean.ApkMeta;
+import one.lfa.repomaker.api.RepositoryItemType;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     return Files.isRegularFile(file) && name.endsWith(".apk");
   }
 
-  private static RepositoryPackage buildPackageOfFile(final Path file)
+  private static RepositoryAndroidPackage buildAndroidPackageOfFile(final Path file)
     throws IOException
   {
     LOG.debug("checking: {}", file);
@@ -78,12 +79,12 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
       final var label = labelOf(apkMeta);
       final var hash = hashOf(file);
 
-      return RepositoryPackage.builder()
+      return RepositoryAndroidPackage.builder()
         .setId(apkMeta.getPackageName())
         .setName(label)
         .setHash(hash)
         .setSource(URI.create(file.getFileName().toString()))
-        .setVersionCode(apkMeta.getVersionCode().intValue())
+        .setVersionCode(apkMeta.getVersionCode().longValue())
         .setVersionName(apkMeta.getVersionName())
         .build();
     }
@@ -122,6 +123,46 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     return label;
   }
 
+  /**
+   * For each package in the repository, remove the oldest releases (assuming that a limit has been
+   * specified for releases).
+   */
+
+  private static RepositoryDirectoryBuilderResult trimOldReleases(
+    final RepositoryDirectoryBuilderConfiguration configuration,
+    final RepositoryDirectoryBuilderResult.Builder resultBuilder,
+    final Map<URI, Path> uriToFile,
+    final Repository initialRepository)
+  {
+    final var limitReleasesOpt = configuration.limitReleases();
+    if (limitReleasesOpt.isPresent()) {
+      final var limitRelease = limitReleasesOpt.getAsInt();
+      final var limitedPackages = new ArrayList<RepositoryItemType>(32);
+      final var byName = initialRepository.itemsById();
+      final var ignored = new HashSet<Path>();
+
+      for (final var key : byName.keySet()) {
+        final var versions = byName.get(key);
+        final var limit = Math.min(limitRelease, versions.size());
+        final var start = versions.size() - limit;
+        final var limited = versions.subList(start, versions.size());
+        limitedPackages.addAll(limited);
+
+        for (var index = 0; index < start; ++index) {
+          final var file = uriToFile.get(versions.get(index).source());
+          ignored.add(file);
+        }
+      }
+      resultBuilder.setIgnoredAPKs(ignored);
+      resultBuilder.setRepository(initialRepository.withItems(limitedPackages));
+    } else {
+      resultBuilder.setIgnoredAPKs(Collections.emptyList());
+      resultBuilder.setRepository(initialRepository);
+    }
+
+    return resultBuilder.build();
+  }
+
   @Override
   public RepositoryDirectoryBuilderResult build(
     final RepositoryDirectoryBuilderConfiguration configuration)
@@ -147,53 +188,13 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     final var uriToFile = new TreeMap<URI, Path>();
     for (final var file : files) {
       if (appearsToBeAPK(file)) {
-        final var repositoryPackage = buildPackageOfFile(file);
+        final var repositoryPackage = buildAndroidPackageOfFile(file);
         uriToFile.put(repositoryPackage.source(), file);
-        repositoryBuilder.addPackages(repositoryPackage);
+        repositoryBuilder.addItems(repositoryPackage);
       }
     }
 
     final var initialRepository = repositoryBuilder.build();
     return trimOldReleases(configuration, resultBuilder, uriToFile, initialRepository);
-  }
-
-  /**
-   * For each package in the repository, remove the oldest releases (assuming that a limit has
-   * been specified for releases).
-   */
-
-  private static RepositoryDirectoryBuilderResult trimOldReleases(
-    final RepositoryDirectoryBuilderConfiguration configuration,
-    final RepositoryDirectoryBuilderResult.Builder resultBuilder,
-    final Map<URI, Path> uriToFile,
-    final Repository initialRepository)
-  {
-    final var limitReleasesOpt = configuration.limitReleases();
-    if (limitReleasesOpt.isPresent()) {
-      final var limitRelease = limitReleasesOpt.getAsInt();
-      final var limitedPackages = new ArrayList<RepositoryPackage>(32);
-      final var byName = initialRepository.packagesByName();
-      final var ignored = new HashSet<Path>();
-
-      for (final var key : byName.keySet()) {
-        final var versions = byName.get(key);
-        final var limit = Math.min(limitRelease, versions.size());
-        final var start = versions.size() - limit;
-        final var limited = versions.subList(start, versions.size());
-        limitedPackages.addAll(limited);
-
-        for (var index = 0; index < start; ++index) {
-          final var file = uriToFile.get(versions.get(index).source());
-          ignored.add(file);
-        }
-      }
-      resultBuilder.setIgnoredAPKs(ignored);
-      resultBuilder.setRepository(initialRepository.withPackages(limitedPackages));
-    } else {
-      resultBuilder.setIgnoredAPKs(Collections.emptyList());
-      resultBuilder.setRepository(initialRepository);
-    }
-
-    return resultBuilder.build();
   }
 }

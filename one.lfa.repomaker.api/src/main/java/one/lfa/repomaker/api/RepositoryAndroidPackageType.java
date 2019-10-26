@@ -22,46 +22,28 @@ import org.immutables.value.Value;
 import java.net.URI;
 
 /**
- * A package in a repository.
+ * An Android package in a repository.
  */
 
 @ImmutablesStyleType
 @Value.Immutable
-public interface RepositoryPackageType
+public interface RepositoryAndroidPackageType extends RepositoryItemType
 {
-  /**
-   * @return The package ID
-   */
-
+  @Override
   String id();
 
-  /**
-   * @return The package version
-   */
-
-  int versionCode();
-
-  /**
-   * @return The humanly-readable version name
-   */
-
+  @Override
   String versionName();
 
-  /**
-   * @return The humanly-readable package label
-   */
-
+  @Override
   String name();
 
-  /**
-   * @return The source URI of the package
-   */
-
+  @Override
   URI source();
 
-  /**
-   * @return The hash of the package
-   */
-
+  @Override
   Hash hash();
+
+  @Override
+  long versionCode();
 }

@@ -17,7 +17,8 @@
 package one.lfa.repomaker.vanilla;
 
 import one.lfa.repomaker.api.Repository;
-import one.lfa.repomaker.api.RepositoryPackage;
+import one.lfa.repomaker.api.RepositoryAndroidPackage;
+import one.lfa.repomaker.api.RepositoryOPDSPackage;
 import one.lfa.repomaker.serializer.api.RepositorySerializerType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,16 +40,16 @@ import java.util.Properties;
  * A repository serializer.
  */
 
-public final class RepositorySerializer implements RepositorySerializerType
+public final class RepositorySerializerV2 implements RepositorySerializerType
 {
-  private static final String NAMESPACE = "urn:au.org.libraryforall.updater.repository.xml:1.0";
+  private static final String NAMESPACE = "urn:au.org.libraryforall.updater.repository.xml:2.0";
 
   private final Repository repository;
   private final URI target;
   private final OutputStream stream;
   private final DocumentBuilderFactory documentBuilders;
 
-  RepositorySerializer(
+  RepositorySerializerV2(
     final Repository in_repository,
     final URI in_target,
     final OutputStream in_stream)
@@ -59,7 +60,6 @@ public final class RepositorySerializer implements RepositorySerializerType
       Objects.requireNonNull(in_target, "target");
     this.stream =
       Objects.requireNonNull(in_stream, "stream");
-
     this.documentBuilders =
       DocumentBuilderFactory.newInstance();
   }
@@ -68,30 +68,46 @@ public final class RepositorySerializer implements RepositorySerializerType
     final Document document,
     final Repository repository)
   {
-    final var root = document.createElementNS(NAMESPACE, "r:repository");
+    final var root = document.createElementNS(NAMESPACE, "r:Repository");
 
     root.setAttribute("id", repository.id().toString());
     root.setAttribute("updated", repository.updated().toString());
     root.setAttribute("title", repository.title());
     root.setAttribute("self", repository.self().toString());
 
-    for (final var pack : repository.packages()) {
-      root.appendChild(ofPackage(document, pack));
+    for (final var pack : repository.items()) {
+      if (pack instanceof RepositoryAndroidPackage) {
+        root.appendChild(ofAndroidPackage(document, (RepositoryAndroidPackage) pack));
+      } else if (pack instanceof RepositoryOPDSPackage) {
+        root.appendChild(ofOPDSPackage(document, (RepositoryOPDSPackage) pack));
+      }
     }
-
     return root;
   }
 
-  private static Element ofPackage(
+  private static Element ofOPDSPackage(
     final Document document,
-    final RepositoryPackage pack)
+    final RepositoryOPDSPackage pack)
   {
-    final var root = document.createElementNS(NAMESPACE, "r:package");
-
+    final var root = document.createElementNS(NAMESPACE, "r:OPDSPackage");
     root.setAttribute("id", pack.id());
     root.setAttribute("name", pack.name());
     root.setAttribute("versionName", pack.versionName());
-    root.setAttribute("versionCode", Integer.toString(pack.versionCode()));
+    root.setAttribute("versionCode", Long.toString(pack.versionCode()));
+    root.setAttribute("sha256", pack.hash().text());
+    root.setAttribute("source", pack.source().toString());
+    return root;
+  }
+
+  private static Element ofAndroidPackage(
+    final Document document,
+    final RepositoryAndroidPackage pack)
+  {
+    final var root = document.createElementNS(NAMESPACE, "r:AndroidPackage");
+    root.setAttribute("id", pack.id());
+    root.setAttribute("name", pack.name());
+    root.setAttribute("versionName", pack.versionName());
+    root.setAttribute("versionCode", Long.toString(pack.versionCode()));
     root.setAttribute("sha256", pack.hash().text());
     root.setAttribute("source", pack.source().toString());
     return root;
