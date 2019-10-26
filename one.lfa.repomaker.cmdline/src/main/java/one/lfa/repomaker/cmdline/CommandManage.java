@@ -53,6 +53,12 @@ final class CommandManage extends CommandRoot
     required = false)
   private boolean deleteOldReleases;
 
+  @Parameter(
+    names = "--repository-format-version",
+    description = "The file format version the generated repository will use",
+    required = false)
+  private int formatVersion = 2;
+
   // CHECKSTYLE:ON
 
   CommandManage()
@@ -78,6 +84,7 @@ final class CommandManage extends CommandRoot
         .setUuid(this.uuid)
         .setSelf(this.uri)
         .setPath(this.directory)
+        .setFormatVersion(this.formatVersion)
         .build();
 
     final var manager =

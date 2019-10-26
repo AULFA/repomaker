@@ -54,6 +54,12 @@ final class CommandGenerate extends CommandRoot
   private int releases = Integer.MAX_VALUE;
 
   @Parameter(
+    names = "--repository-format-version",
+    description = "The file format version the generated repository will use",
+    required = false)
+  private int formatVersion = 2;
+
+  @Parameter(
     names = "--output",
     description = "The output file",
     required = true)
@@ -98,7 +104,7 @@ final class CommandGenerate extends CommandRoot
       final var result = builder.build(configuration);
       final var repos = result.repository();
       final var target = URI.create("urn:stdout");
-      final var serializer = serializerProvider.createSerializer(repos, target, output);
+      final var serializer = serializerProvider.createSerializer(repos, target, output, this.formatVersion);
       serializer.serialize();
     }
 
