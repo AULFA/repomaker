@@ -42,7 +42,7 @@ import java.util.Properties;
 
 public final class RepositorySerializerV2 implements RepositorySerializerType
 {
-  private static final String NAMESPACE = "urn:au.org.libraryforall.updater.repository.xml:2.0";
+  private static final String NAMESPACE = "urn:one.lfa.updater.repository.xml:2.0";
 
   private final Repository repository;
   private final URI target;
