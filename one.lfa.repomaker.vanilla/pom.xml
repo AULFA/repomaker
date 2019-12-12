@@ -36,6 +36,15 @@
     </dependency>
 
     <dependency>
+      <groupId>com.io7m.jlexing</groupId>
+      <artifactId>com.io7m.jlexing.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>one.lfa</groupId>
+      <artifactId>one.lfa.opdsget.api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.annotation.bundle</artifactId>
       <scope>provided</scope>

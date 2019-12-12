@@ -16,6 +16,9 @@
 
 package one.lfa.repomaker.vanilla;
 
+import java.util.Objects;
+import java.util.ServiceLoader;
+import one.lfa.opdsget.api.OPDSManifestReaderProviderType;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderProviderType;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderType;
 
@@ -26,18 +29,44 @@ import one.lfa.repomaker.api.RepositoryDirectoryBuilderType;
 public final class RepositoryDirectoryBuilderProvider
   implements RepositoryDirectoryBuilderProviderType
 {
+  private final OPDSManifestReaderProviderType opdsReaders;
+
   /**
    * Construct a provider.
    */
 
   public RepositoryDirectoryBuilderProvider()
   {
+    this(ServiceLoader.load(OPDSManifestReaderProviderType.class)
+           .findFirst()
+           .orElseThrow(() -> new IllegalStateException(
+             "No available implementations of type " + OPDSManifestReaderProviderType.class)));
+  }
 
+  private RepositoryDirectoryBuilderProvider(
+    final OPDSManifestReaderProviderType inOpdsReaders)
+  {
+    this.opdsReaders =
+      Objects.requireNonNull(inOpdsReaders, "opdsReaders");
+  }
+
+  /**
+   * Create a new directory builder provider.
+   *
+   * @param opdsReaders A provider of OPDS manifest reader provider
+   *
+   * @return A new provider
+   */
+
+  public static RepositoryDirectoryBuilderProviderType create(
+    final OPDSManifestReaderProviderType opdsReaders)
+  {
+    return new RepositoryDirectoryBuilderProvider(opdsReaders);
   }
 
   @Override
   public RepositoryDirectoryBuilderType createBuilder()
   {
-    return new RepositoryDirectoryBuilder();
+    return new RepositoryDirectoryBuilder(this.opdsReaders);
   }
 }

@@ -16,8 +16,14 @@
 
 package one.lfa.repomaker.vanilla;
 
+import com.io7m.jlexing.core.LexicalPosition;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
 import net.dongliu.apk.parser.ApkFile;
 import net.dongliu.apk.parser.bean.ApkMeta;
+import one.lfa.opdsget.api.OPDSManifestParseError;
+import one.lfa.opdsget.api.OPDSManifestReaderProviderType;
 import one.lfa.repomaker.api.Hash;
 import one.lfa.repomaker.api.Repository;
 import one.lfa.repomaker.api.RepositoryAndroidPackage;
@@ -25,6 +31,7 @@ import one.lfa.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderResult;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderType;
 import one.lfa.repomaker.api.RepositoryItemType;
+import one.lfa.repomaker.api.RepositoryOPDSPackage;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +59,19 @@ import java.util.stream.Collectors;
  * A directory-based repository builder.
  */
 
-public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuilderType
+public final class RepositoryDirectoryBuilder implements
+  RepositoryDirectoryBuilderType
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(RepositoryDirectoryBuilder.class);
 
-  RepositoryDirectoryBuilder()
-  {
+  private final OPDSManifestReaderProviderType opdsReaders;
 
+  RepositoryDirectoryBuilder(
+    final OPDSManifestReaderProviderType inOpdsReaders)
+  {
+    this.opdsReaders =
+      Objects.requireNonNull(inOpdsReaders, "opdsReaders");
   }
 
   private static boolean appearsToBeAPK(
@@ -69,7 +81,82 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     return Files.isRegularFile(file) && name.endsWith(".apk");
   }
 
-  private static RepositoryAndroidPackage buildAndroidPackageOfFile(final Path file)
+  private static boolean appearsToBeOPDSManifest(
+    final Path file)
+  {
+    final var name = file.getFileName().toString();
+    return Files.isRegularFile(file) && name.endsWith(".omx");
+  }
+
+  private RepositoryOPDSPackage buildOPDSPackageOfFile(
+    final Path file)
+    throws IOException
+  {
+    LOG.debug("checking: {}", file);
+
+    final var errors = new LinkedList<OPDSManifestParseError>();
+    final var hash = hashOf(file);
+
+    try (var stream = Files.newInputStream(file)) {
+      try (var reader =
+             this.opdsReaders.createReader(errors::add, file.toUri(), stream)) {
+        final var descriptionOpt = reader.read();
+        if (descriptionOpt.isPresent()) {
+          final var description = descriptionOpt.get();
+          return RepositoryOPDSPackage.builder()
+            .setId(description.id().toString())
+            .setName(description.title())
+            .setHash(hash)
+            .setSource(URI.create(file.getFileName().toString()))
+            .setVersionCode(timeCodeOf(description.updated()))
+            .setVersionName(timeOf(description.updated()))
+            .build();
+        }
+
+        for (final OPDSManifestParseError error : errors) {
+          final LexicalPosition<URI> lexical = error.lexical();
+          switch (error.severity()) {
+            case WARNING:
+              LOG.warn(
+                "{}:{}:{}: {}: ",
+                lexical.file(),
+                Integer.valueOf(lexical.line()),
+                Integer.valueOf(lexical.column()),
+                error.message(),
+                error.exception().orElse(null));
+              break;
+            case ERROR:
+              LOG.error(
+                "{}:{}:{}: {}: ", lexical.file(),
+                Integer.valueOf(lexical.line()),
+                Integer.valueOf(lexical.column()),
+                error.message(),
+                error.exception().orElse(null));
+              break;
+          }
+        }
+
+        throw new IOException("OPDS manifest was unparseable");
+      }
+    }
+  }
+
+  private static long timeCodeOf(
+    final OffsetDateTime time)
+  {
+    final var formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    return Long.parseUnsignedLong(formatter.format(time));
+  }
+
+  private static String timeOf(
+    final OffsetDateTime time)
+  {
+    final var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    return formatter.format(time);
+  }
+
+  private static RepositoryAndroidPackage buildAndroidPackageOfFile(
+    final Path file)
     throws IOException
   {
     LOG.debug("checking: {}", file);
@@ -103,7 +190,9 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     final Path file)
     throws IOException
   {
-    try (var stream = Files.newInputStream(file, StandardOpenOption.READ)) {
+    try (var stream = Files.newInputStream(
+      file,
+      StandardOpenOption.READ)) {
       final var digest = MessageDigest.getInstance("SHA-256");
       try (var digestStream = new DigestInputStream(stream, digest)) {
         digestStream.transferTo(OutputStream.nullOutputStream());
@@ -187,6 +276,12 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
 
     final var uriToFile = new TreeMap<URI, Path>();
     for (final var file : files) {
+      if (appearsToBeOPDSManifest(file)) {
+        final var repositoryPackage = this.buildOPDSPackageOfFile(file);
+        uriToFile.put(repositoryPackage.source(), file);
+        repositoryBuilder.addItems(repositoryPackage);
+        continue;
+      }
       if (appearsToBeAPK(file)) {
         final var repositoryPackage = buildAndroidPackageOfFile(file);
         uriToFile.put(repositoryPackage.source(), file);
@@ -195,6 +290,10 @@ public final class RepositoryDirectoryBuilder implements RepositoryDirectoryBuil
     }
 
     final var initialRepository = repositoryBuilder.build();
-    return trimOldReleases(configuration, resultBuilder, uriToFile, initialRepository);
+    return trimOldReleases(
+      configuration,
+      resultBuilder,
+      uriToFile,
+      initialRepository);
   }
 }

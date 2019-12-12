@@ -99,6 +99,7 @@ final class CommandGenerate extends CommandRoot
           .setUuid(this.uuid)
           .setSelf(this.uri)
           .setPath(this.directory)
+          .setFormatVersion(this.formatVersion)
           .build();
 
       final var result = builder.build(configuration);

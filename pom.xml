@@ -33,6 +33,7 @@
   <properties>
     <io7m.api.previousVersion>0.0.1</io7m.api.previousVersion>
     <one.lfa.org.immutables.version>2.7.5</one.lfa.org.immutables.version>
+    <one.lfa.opdsget.api.version>1.1.0</one.lfa.opdsget.api.version>
   </properties>
 
   <inceptionYear>2019</inceptionYear>
@@ -110,6 +111,21 @@
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.annotation.versioning</artifactId>
         <version>1.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>one.lfa</groupId>
+        <artifactId>one.lfa.opdsget.api</artifactId>
+        <version>${one.lfa.opdsget.api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>one.lfa</groupId>
+        <artifactId>one.lfa.opdsget.vanilla</artifactId>
+        <version>${one.lfa.opdsget.api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.io7m.jlexing</groupId>
+        <artifactId>com.io7m.jlexing.core</artifactId>
+        <version>2.0.0</version>
       </dependency>
 
       <dependency>
