@@ -65,6 +65,11 @@ public final class RepositoryDirectoryBuilder implements
   private static final Logger LOG =
     LoggerFactory.getLogger(RepositoryDirectoryBuilder.class);
 
+  private static final DateTimeFormatter TIMECODE_FORMATTER =
+    DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+  private static final DateTimeFormatter TIME_STRING_FORMATTER =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
   private final OPDSManifestReaderProviderType opdsReaders;
 
   RepositoryDirectoryBuilder(
@@ -144,15 +149,13 @@ public final class RepositoryDirectoryBuilder implements
   private static long timeCodeOf(
     final OffsetDateTime time)
   {
-    final var formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-    return Long.parseUnsignedLong(formatter.format(time));
+    return Long.parseUnsignedLong(TIMECODE_FORMATTER.format(time));
   }
 
   private static String timeOf(
     final OffsetDateTime time)
   {
-    final var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    return formatter.format(time);
+    return TIME_STRING_FORMATTER.format(time);
   }
 
   private static RepositoryAndroidPackage buildAndroidPackageOfFile(
