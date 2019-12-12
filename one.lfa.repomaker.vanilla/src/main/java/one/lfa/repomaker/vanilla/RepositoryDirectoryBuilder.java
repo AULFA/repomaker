@@ -68,7 +68,7 @@ public final class RepositoryDirectoryBuilder implements
   private static final DateTimeFormatter TIMECODE_FORMATTER =
     DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
   private static final DateTimeFormatter TIME_STRING_FORMATTER =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
   private final OPDSManifestReaderProviderType opdsReaders;
 
