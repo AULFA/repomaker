@@ -59,6 +59,11 @@ Usage: repomaker [options] [command] [command options]
             The number of releases per package to include (includes all 
             releases if not specified)
             Default: 2147483647
+          --repository-format-version
+            The file format version the generated repository will use
+            Default: 2
+          --repository-passwords
+            The password file for repository items
         * --source
             The source URI that will be used in the repository
         * --title
@@ -76,13 +81,18 @@ Usage: repomaker [options] [command] [command options]
         * --id
             The UUID that will be used to identify the repository
           --releases-delete-old
-            Delete releases that are older than the limit specified by 
-            --releases-per-package 
+            Delete releases that are older than the limit specified by
+            --releases-per-package
             Default: false
           --releases-per-package
-            The number of releases per package to include (includes all 
+            The number of releases per package to include (includes all
             releases if not specified)
             Default: 2147483647
+          --repository-format-version
+            The file format version the generated repository will use
+            Default: 2
+          --repository-passwords
+            The password file for repository items
         * --source
             The source URI that will be used in the repository
         * --title
@@ -91,6 +101,7 @@ Usage: repomaker [options] [command] [command options]
             Set the minimum logging verbosity level
             Default: info
             Possible Values: [trace, debug, info, warn, error]
+
 ```
 
 The `repomaker` tool generates an XML file suitable for consumption by the [LFA Updater](https://github.com/AULFA/updater)
