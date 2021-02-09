@@ -20,5 +20,4 @@ jobs:
       - name: Coverage
         uses: codecov/codecov-action@v1
         with:
-          file: one.lfa.repomaker.tests/target/site/jacoco/jacoco.xml
-
+          file: one.lfa.repomaker.tests/target/site/jacoco-aggregate/jacoco.xml
