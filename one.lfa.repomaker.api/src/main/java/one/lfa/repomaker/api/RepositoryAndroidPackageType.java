@@ -20,6 +20,7 @@ import com.io7m.immutables.styles.ImmutablesStyleType;
 import org.immutables.value.Value;
 
 import java.net.URI;
+import java.util.Optional;
 
 /**
  * An Android package in a repository.
@@ -43,6 +44,9 @@ public interface RepositoryAndroidPackageType extends RepositoryItemType
 
   @Override
   Hash hash();
+
+  @Override
+  Optional<String> password();
 
   @Override
   long versionCode();

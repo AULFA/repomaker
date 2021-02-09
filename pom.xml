@@ -9,12 +9,12 @@
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
     <artifactId>com.io7m.primogenitor.full</artifactId>
-    <version>3.5.0</version>
+    <version>6.2.0</version>
   </parent>
 
   <groupId>one.lfa</groupId>
   <artifactId>one.lfa.repomaker</artifactId>
-  <version>0.0.6</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>one.lfa.repomaker</name>
@@ -34,6 +34,7 @@
     <io7m.api.previousVersion>0.0.1</io7m.api.previousVersion>
     <one.lfa.org.immutables.version>2.7.5</one.lfa.org.immutables.version>
     <one.lfa.opdsget.api.version>1.1.0</one.lfa.opdsget.api.version>
+    <com.io7m.blackthorne.version>1.2.1</com.io7m.blackthorne.version>
   </properties>
 
   <inceptionYear>2019</inceptionYear>
@@ -127,6 +128,21 @@
         <artifactId>com.io7m.jlexing.core</artifactId>
         <version>2.0.0</version>
       </dependency>
+      <dependency>
+        <groupId>com.io7m.blackthorne</groupId>
+        <artifactId>com.io7m.blackthorne.jxe</artifactId>
+        <version>${com.io7m.blackthorne.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.io7m.blackthorne</groupId>
+        <artifactId>com.io7m.blackthorne.api</artifactId>
+        <version>${com.io7m.blackthorne.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.io7m.jxe</groupId>
+        <artifactId>com.io7m.jxe.core</artifactId>
+        <version>1.0.0</version>
+      </dependency>
 
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -141,7 +157,7 @@
       <dependency>
         <groupId>nl.jqno.equalsverifier</groupId>
         <artifactId>equalsverifier</artifactId>
-        <version>3.1.10</version>
+        <version>3.5.4</version>
       </dependency>
 
       <dependency>
@@ -172,22 +188,5 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <!-- Require JDK >= 11 -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>11</source>
-            <target>11</target>
-            <release>11</release>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>

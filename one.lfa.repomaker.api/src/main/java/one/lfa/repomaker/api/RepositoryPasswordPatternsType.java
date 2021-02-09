@@ -19,35 +19,43 @@ package one.lfa.repomaker.api;
 import com.io7m.immutables.styles.ImmutablesStyleType;
 import org.immutables.value.Value;
 
-import java.net.URI;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
- * An OPDS package in a repository.
+ * A set of patterns associating passwords with repository entries.
  */
 
 @ImmutablesStyleType
 @Value.Immutable
-public interface RepositoryOPDSPackageType extends RepositoryItemType
+public interface RepositoryPasswordPatternsType
 {
-  @Override
-  String id();
+  /**
+   * @return A list of patterns to be matched against filenames
+   */
 
-  @Override
-  String versionName();
+  List<RepositoryPasswordPattern> patterns();
 
-  @Override
-  String name();
+  /**
+   * Retrieve the first pattern that matches the given file.
+   *
+   * @param file The file
+   *
+   * @return The pattern, or nothing if no pattern matches
+   */
 
-  @Override
-  URI source();
+  default Optional<RepositoryPasswordPattern> patternFor(
+    final Path file)
+  {
+    Objects.requireNonNull(file, "file");
 
-  @Override
-  Hash hash();
-
-  @Override
-  Optional<String> password();
-
-  @Override
-  long versionCode();
+    for (final var pattern : this.patterns()) {
+      if (pattern.matches(file)) {
+        return Optional.of(pattern);
+      }
+    }
+    return Optional.empty();
+  }
 }

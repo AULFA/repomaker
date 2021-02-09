@@ -1,10 +1,27 @@
+/*
+ * Copyright © 2019 Library For All
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package one.lfa.repomaker.cmdline;
 
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderProviderType;
 import one.lfa.repomaker.serializer.api.RepositorySerializerProviderType;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import one.lfa.repomaker.vanilla.RepositoryPasswordPatternsParser;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -60,6 +77,12 @@ final class CommandGenerate extends CommandRoot
   private int formatVersion = 2;
 
   @Parameter(
+    names = "--repository-passwords",
+    description = "The password file for repository items",
+    required = false)
+  private Path repositoryPasswords;
+
+  @Parameter(
     names = "--output",
     description = "The output file",
     required = true)
@@ -81,31 +104,54 @@ final class CommandGenerate extends CommandRoot
     final var builderProvider =
       ServiceLoader.load(RepositoryDirectoryBuilderProviderType.class)
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("No available services of type " + RepositoryDirectoryBuilderProviderType.class));
+        .orElseThrow(() -> new IllegalStateException(String.format(
+          "No available services of type %s",
+          RepositoryDirectoryBuilderProviderType.class)));
 
     final var serializerProvider =
       ServiceLoader.load(RepositorySerializerProviderType.class)
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("No available services of type " + RepositorySerializerProviderType.class));
+        .orElseThrow(() -> new IllegalStateException(String.format(
+          "No available services of type %s",
+          RepositorySerializerProviderType.class)));
 
-    try (var output = Files.newOutputStream(this.output, CREATE, WRITE, TRUNCATE_EXISTING)) {
+    try (var output =
+           Files.newOutputStream(
+             this.output,
+             CREATE,
+             WRITE,
+             TRUNCATE_EXISTING)) {
       final var builder =
         builderProvider.createBuilder();
 
-      final var configuration =
-        RepositoryDirectoryBuilderConfiguration.builder()
-          .setLimitReleases(OptionalInt.of(this.releases))
-          .setTitle(this.title)
-          .setUuid(this.uuid)
-          .setSelf(this.uri)
-          .setPath(this.directory)
-          .setFormatVersion(this.formatVersion)
-          .build();
+      final var configBuilder =
+        RepositoryDirectoryBuilderConfiguration.builder();
 
-      final var result = builder.build(configuration);
+      configBuilder
+        .setLimitReleases(OptionalInt.of(this.releases))
+        .setTitle(this.title)
+        .setUuid(this.uuid)
+        .setSelf(this.uri)
+        .setPath(this.directory)
+        .setFormatVersion(this.formatVersion);
+
+      if (this.repositoryPasswords != null) {
+        configBuilder.setPasswordPatterns(
+          RepositoryPasswordPatternsParser.parse(this.repositoryPasswords)
+        );
+      }
+
+      final var configuration =
+        configBuilder.build();
+
+      final var result =
+        builder.build(configuration);
+
       final var repos = result.repository();
       final var target = URI.create("urn:stdout");
-      final var serializer = serializerProvider.createSerializer(repos, target, output, this.formatVersion);
+      final var serializer =
+        serializerProvider.createSerializer(
+          repos, target, output, this.formatVersion);
       serializer.serialize();
     }
 

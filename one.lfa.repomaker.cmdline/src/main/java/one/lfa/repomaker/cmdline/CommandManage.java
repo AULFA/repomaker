@@ -1,10 +1,27 @@
+/*
+ * Copyright © 2019 Library For All
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package one.lfa.repomaker.cmdline;
 
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import one.lfa.repomaker.api.RepositoryDirectoryBuilderConfiguration;
 import one.lfa.repomaker.manager.api.RepositoryManagerConfiguration;
 import one.lfa.repomaker.manager.api.RepositoryManagerProviderType;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
+import one.lfa.repomaker.vanilla.RepositoryPasswordPatternsParser;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -59,6 +76,12 @@ final class CommandManage extends CommandRoot
     required = false)
   private int formatVersion = 2;
 
+  @Parameter(
+    names = "--repository-passwords",
+    description = "The password file for repository items",
+    required = false)
+  private Path repositoryPasswords;
+
   // CHECKSTYLE:ON
 
   CommandManage()
@@ -75,17 +98,28 @@ final class CommandManage extends CommandRoot
     final var managerProvider =
       ServiceLoader.load(RepositoryManagerProviderType.class)
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("No available services of type " + RepositoryManagerProviderType.class));
+        .orElseThrow(() -> new IllegalStateException(String.format(
+          "No available services of type %s",
+          RepositoryManagerProviderType.class)));
+
+    final var configBuilder =
+      RepositoryDirectoryBuilderConfiguration.builder();
+
+    configBuilder.setLimitReleases(this.releases)
+      .setTitle(this.title)
+      .setUuid(this.uuid)
+      .setSelf(this.uri)
+      .setPath(this.directory)
+      .setFormatVersion(this.formatVersion);
+
+    if (this.repositoryPasswords != null) {
+      configBuilder.setPasswordPatterns(
+        RepositoryPasswordPatternsParser.parse(this.repositoryPasswords)
+      );
+    }
 
     final var configuration =
-      RepositoryDirectoryBuilderConfiguration.builder()
-        .setLimitReleases(this.releases)
-        .setTitle(this.title)
-        .setUuid(this.uuid)
-        .setSelf(this.uri)
-        .setPath(this.directory)
-        .setFormatVersion(this.formatVersion)
-        .build();
+      configBuilder.build();
 
     final var manager =
       managerProvider.createManager(

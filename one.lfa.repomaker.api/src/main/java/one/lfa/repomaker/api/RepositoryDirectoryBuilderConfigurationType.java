@@ -69,4 +69,44 @@ public interface RepositoryDirectoryBuilderConfigurationType
    */
 
   int formatVersion();
+
+  /**
+   * @return The set of package → password mappings.
+   */
+
+  @Value.Default
+  default RepositoryPasswordPatterns passwordPatterns()
+  {
+    return RepositoryPasswordPatterns.builder()
+      .build();
+  }
+
+  /**
+   * Check preconditions for the type.
+   */
+
+  @Value.Check
+  default void checkPreconditions()
+  {
+    final var oldFormat =
+      this.formatVersion() < 3;
+    final var usingPatterns =
+      !this.passwordPatterns().patterns().isEmpty();
+
+    if (oldFormat && usingPatterns) {
+      final var lineSeparator = System.lineSeparator();
+      throw new UnsupportedOperationException(
+        new StringBuilder(128)
+          .append(
+            "Password protected items require a higher repository format version.")
+          .append(lineSeparator)
+          .append("  Received: Format version ")
+          .append(this.formatVersion())
+          .append(lineSeparator)
+          .append("  Required: Format version ≥ 3")
+          .append(lineSeparator)
+          .toString()
+      );
+    }
+  }
 }

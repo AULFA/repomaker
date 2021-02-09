@@ -52,8 +52,14 @@ public final class RepositorySerializerProvider implements RepositorySerializerP
       case 2: {
         return new RepositorySerializerV2(repository, target, stream);
       }
+      case 3: {
+        return new RepositorySerializerV3(repository, target, stream);
+      }
       default: {
-        throw new UnsupportedOperationException("Unsupported format version: " + formatVersion);
+        throw new UnsupportedOperationException(String.format(
+          "Unsupported format version: %d",
+          Integer.valueOf(formatVersion))
+        );
       }
     }
   }
